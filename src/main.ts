@@ -4,6 +4,8 @@ interface WrappedValue<T> {
 }
 
 export class KVBus {
+  constructor(private persistenceAdapter?: IPersistenceAdapter) {}
+
   private data = new Map<string, any>()
 
   set<T>(
@@ -22,7 +24,7 @@ export class KVBus {
     )
   }
 
-  get(key: string) {
+  get<T>(key: string): T {
     const wrappedValue = this.data.get(key)
 
     if (!wrappedValue) {
@@ -60,6 +62,26 @@ export class KVBus {
     this.data.delete(key)
   }
 
+  persist() {
+    if (!this.persistenceAdapter) {
+      throw new Error('No persistence adapter provided')
+    }
+
+    const data = Array.from(this.data.entries())
+    this.persistenceAdapter.persist(
+      data.map(([k, v]) => [k, this.wrapValue(v, {})])
+    )
+  }
+
+  restore() {
+    if (!this.persistenceAdapter) {
+      throw new Error('No persistence adapter provided')
+    }
+
+    const data = this.persistenceAdapter.restore()
+    this.data = new Map(data)
+  }
+
   private wrapValue<T>(
     value: T,
     options: Omit<WrappedValue<T>, 'value'>
@@ -79,4 +101,9 @@ export class KVBus {
       throw new Error(`Key ${key} has expired`)
     }
   }
+}
+
+export interface IPersistenceAdapter {
+  persist(data: [string, any][]): void
+  restore(): [string, any][]
 }
