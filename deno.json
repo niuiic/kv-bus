@@ -1,4 +1,9 @@
 {
   "tasks": {},
-  "imports": {}
+  "imports": {},
+  "lint": {
+    "rules": {
+      "exclude": ["no-explicit-any"]
+    }
+  }
 }
