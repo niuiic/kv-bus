@@ -4,7 +4,11 @@ interface WrappedValue<T> {
 }
 
 export class KVBus {
-  constructor(private persistenceAdapter?: IPersistenceAdapter) {}
+  private cleanTask: undefined | number
+
+  constructor(private persistenceAdapter?: IPersistenceAdapter) {
+    this.cleanTask = setInterval(() => this.clean(), 6e4)
+  }
 
   private data = new Map<string, any>()
 
@@ -62,6 +66,16 @@ export class KVBus {
     this.data.delete(key)
   }
 
+  transaction(fn: () => void) {
+    const backup = new Map(this.data)
+    try {
+      fn()
+    } catch (e) {
+      this.data = backup
+      throw e
+    }
+  }
+
   persist() {
     if (!this.persistenceAdapter) {
       throw new Error('No persistence adapter provided')
@@ -82,6 +96,10 @@ export class KVBus {
     this.data = new Map(data)
   }
 
+  dispose() {
+    clearInterval(this.cleanTask)
+  }
+
   private wrapValue<T>(
     value: T,
     options: Omit<WrappedValue<T>, 'value'>
@@ -100,6 +118,16 @@ export class KVBus {
     if (wrappedValue.expiryTime && wrappedValue.expiryTime < Date.now()) {
       throw new Error(`Key ${key} has expired`)
     }
+  }
+
+  private clean() {
+    this.data.entries().forEach(([k, v]) => {
+      try {
+        this.validateKey(k, v)
+      } catch {
+        this.data.delete(k)
+      }
+    })
   }
 }
 
