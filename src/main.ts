@@ -5,9 +5,18 @@ export interface WrappedValue<T> {
 
 export class KVBus {
   private cleanTask: undefined | number
+  private persistenceAdapter: IPersistenceAdapter | undefined
 
-  constructor(private persistenceAdapter?: IPersistenceAdapter) {
-    this.cleanTask = setInterval(() => this.clean(), 6e4)
+  constructor(
+    {
+      clearInterval,
+      persistenceAdapter
+    }: { clearInterval?: number; persistenceAdapter?: IPersistenceAdapter } = {
+      clearInterval: 6e4
+    }
+  ) {
+    this.persistenceAdapter = persistenceAdapter
+    this.cleanTask = setInterval(() => this.clean(), clearInterval)
   }
 
   private data = new Map<string, WrappedValue<unknown>>()
