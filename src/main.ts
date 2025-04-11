@@ -104,6 +104,8 @@ export class KVBus {
   }
 
   dispose() {
+    this.data = new Map()
+    this.persistenceAdapter = undefined
     clearInterval(this.cleanTask)
   }
 
