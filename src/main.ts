@@ -10,7 +10,7 @@ export class KVBus {
     this.cleanTask = setInterval(() => this.clean(), 6e4)
   }
 
-  private data = new Map<string, any>()
+  private data = new Map<string, WrappedValue<unknown>>()
 
   set<T>(
     key: string,
@@ -42,7 +42,7 @@ export class KVBus {
       throw e
     }
 
-    return this.unwrapValue(wrappedValue)
+    return this.unwrapValue(wrappedValue) as T
   }
 
   has(key: string) {
