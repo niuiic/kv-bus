@@ -1,4 +1,4 @@
-interface WrappedValue<T> {
+export interface WrappedValue<T> {
   value: T
   expiryTime?: number
 }
@@ -82,9 +82,7 @@ export class KVBus {
     }
 
     const data = Array.from(this.data.entries())
-    this.persistenceAdapter.persist(
-      data.map(([k, v]) => [k, this.wrapValue(v, {})])
-    )
+    this.persistenceAdapter.persist(data)
   }
 
   restore() {
@@ -132,6 +130,6 @@ export class KVBus {
 }
 
 export interface IPersistenceAdapter {
-  persist(data: [string, any][]): void
-  restore(): [string, any][]
+  persist(data: [string, WrappedValue<unknown>][]): void
+  restore(): [string, WrappedValue<unknown>][]
 }
